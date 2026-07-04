@@ -1,4 +1,4 @@
-# 🔒 VPN L2TP/IPSec Client-to-Site — IKEv1
+# 🔒 VPN Client-to-Site L2TP/IPSec — IKEv1
 
 **Luiggy Habraham Encarnación Cabrera · Matrícula 2025-0663**
 
@@ -7,7 +7,6 @@
 ![Protocolo](https://img.shields.io/badge/Protocolo-L2TP%2FIPSec-C71585?style=for-the-badge)
 ![IKE](https://img.shields.io/badge/IKE-v1-6E4C13?style=for-the-badge)
 ![GNS3](https://img.shields.io/badge/Emulador-GNS3-009639?style=for-the-badge)
-![Uso](https://img.shields.io/badge/Uso-Educativo-blue?style=for-the-badge)
 
 > VPN de acceso remoto individual (client-to-site) usando L2TP sobre IPSec con IKEv1 y autenticación PPP MS-CHAPv2.
 
