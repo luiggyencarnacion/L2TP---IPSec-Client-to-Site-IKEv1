@@ -141,7 +141,7 @@ images/
 ├── 04_show_vpdn_session.png
 ├── 05_show_ip_interface_brief.png
 ├── 06_show_users.png
-└── 07_cliente_vpn_conectado.png
+├── 07_cliente_vpn_conectado.png
 └── 08_interfaz_LAN_cliente_vpn.png
 ```
 
