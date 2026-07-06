@@ -109,7 +109,7 @@ Configurar una VPN **client-to-site** usando **L2TP sobre IPSec** con **IKEv1**,
 
 ## 🔧 Configuración
 
-Ver archivo: `Configuración para VPN L2TP - IPSec Client-to-Site IKEv1.txt`
+Ver archivo: `config.txt`
 
 ---
 
@@ -134,7 +134,7 @@ Se espera:
 ## 📸 Capturas de Pantalla
 
 ```
-evidencias/
+images/
 ├── 01_topologia.png
 ├── 02_show_crypto_isakmp_sa.png
 ├── 03_show_crypto_ipsec_sa.png
