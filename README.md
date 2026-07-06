@@ -136,16 +136,13 @@ Se espera:
 ```
 evidencias/
 ├── 01_topologia.png
-├── 02_aaa_username.png
-├── 03_crypto_isakmp_wildcard.png
-├── 04_crypto_dynamic_map.png
-├── 05_vpdn_virtual_template.png
-├── 06_cliente_windows_configuracion_vpn.png
-├── 07_show_crypto_isakmp_sa.png
-├── 08_show_vpdn_session.png
-├── 09_show_ip_interface_brief.png
-├── 10_show_users.png
-└── 11_conectividad_cliente_lan.png
+├── 02_show_crypto_isakmp_sa.png
+├── 03_show_crypto_ipsec_sa.png
+├── 04_show_vpdn_session.png
+├── 05_show_ip_interface_brief.png
+├── 06_show_users.png
+└── 07_cliente_vpn_conectado.png
+└── 08_interfaz_LAN_cliente_vpn.png
 ```
 
 ---
