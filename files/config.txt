@@ -1,0 +1,334 @@
+################################################################################
+#  CONFIGURACIÓN — VPN L2TP/IPSEC CLIENT-TO-SITE IKEv1
+################################################################################
+
+
+──────────────────────────────────────────
+▶ DISPOSITIVO: ISP-CLARO
+──────────────────────────────────────────
+enable
+conf t
+no ip domain-lookup
+hostname ISP-CLARO
+banner motd # LUIGGY ENCARNACION 2025-0663 | EL ACCESO NO AUTORIZADO ESTA RESTRINGIDO #
+username Admin privilege 15 secret cisco
+service password-encryption
+
+ip domain-name redlocal.com
+crypto key generate rsa general-keys modulus 1024
+ip ssh version 2
+ip ssh time-out 60
+ip ssh authentication-retries 3
+
+line console 0
+ exec-timeout 5 0
+ logging synchronous
+
+line vty 0 4
+ login local
+ transport input ssh
+ exec-timeout 5 0
+ logging synchronous
+
+exit
+
+! Interfaz hacia R-Este
+interface GigabitEthernet1/0
+ ip address 20.6.63.2 255.255.255.252
+ no shutdown
+
+! Interfaz hacia R-Oeste
+interface GigabitEthernet2/0
+ ip address 30.6.63.2 255.255.255.252
+ no shutdown
+
+exit
+
+! Interfaz loopback para pruebas
+int lo0
+ ip address 20.20.20.20 255.255.255.255
+exit
+
+! Rutas estáticas a las LANs
+ip route 10.6.63.0 255.255.255.0 20.6.63.1
+ip route 172.16.63.0 255.255.255.0 30.6.63.1
+
+end
+wr
+
+
+──────────────────────────────────────────
+▶ DISPOSITIVO: R-ESTE
+──────────────────────────────────────────
+enable
+conf t
+no ip domain-lookup
+hostname R-ESTE
+banner motd # LUIGGY ENCARNACION 2025-0663 | EL ACCESO NO AUTORIZADO ESTA RESTRINGIDO #
+username Admin privilege 15 secret cisco
+service password-encryption
+
+ip domain-name redlocal.com
+crypto key generate rsa general-keys modulus 1024
+ip ssh version 2
+ip ssh time-out 60
+ip ssh authentication-retries 3
+
+line console 0
+ exec-timeout 5 0
+ logging synchronous
+
+line vty 0 4
+ login local
+ transport input ssh
+ exec-timeout 5 0
+ logging synchronous
+
+exit
+
+! VPN L2TP/IPSec Client-to-Site IKEv1
+aaa new-model
+aaa authentication ppp VPN-AUTH-USERS local
+aaa authorization network VPN-AUTHOR-USERS local
+
+username luiggy password Luiggy20250663!
+
+crypto isakmp policy 10
+ encryption 3des
+ hash sha
+ authentication pre-share
+ group 2
+ lifetime 86400
+
+crypto isakmp key Luiggy20250663! address 0.0.0.0 0.0.0.0
+
+crypto ipsec transform-set VPN-SET esp-3des esp-sha-hmac
+ mode transport
+exit
+
+crypto dynamic-map VPN-DYN 10
+ set nat demux
+ set transform-set VPN-SET
+
+crypto map VPN 10 ipsec-isakmp dynamic VPN-DYN
+
+vpdn enable
+
+vpdn-group L2TP
+ accept-dialin
+ protocol l2tp
+ virtual-template 1
+ no l2tp tunnel authentication
+exit
+
+interface Virtual-Template1
+ ip unnumbered GigabitEthernet0/0
+ peer default ip address pool VPN-POOL
+ ppp authentication ms-chap-v2 VPN-AUTH-USERS
+ ppp authorization VPN-AUTHOR-USERS
+ ip nat inside
+exit
+
+ip local pool VPN-POOL 192.168.63.10 192.168.63.150
+
+! WAN hacia ISP
+interface GigabitEthernet1/0
+ ip address 20.6.63.1 255.255.255.252
+ no shutdown
+ ip nat outside
+ crypto map VPN
+
+! LAN
+interface GigabitEthernet0/0
+ ip address 10.6.63.1 255.255.255.0
+ no shutdown
+ ip nat inside
+exit
+
+! DHCP
+ip dhcp excluded-address 10.6.63.1 10.6.63.9
+
+ip dhcp pool REDLOCAL
+ network 10.6.63.0 255.255.255.0
+ default-router 10.6.63.1
+ dns-server 8.8.8.8 1.1.1.1
+ domain-name redlocal.com
+
+! NAT
+ip nat inside source list NAT_ACL interface GigabitEthernet1/0 overload
+
+ip access-list standard NAT_ACL
+ permit 10.6.63.0 0.0.0.255
+ permit 192.168.63.0 0.0.0.255
+exit
+
+! Ruta default hacia ISP
+ip route 0.0.0.0 0.0.0.0 20.6.63.2
+
+end
+wr
+
+
+──────────────────────────────────────────
+▶ DISPOSITIVO: R-OESTE
+──────────────────────────────────────────
+enable
+conf t
+no ip domain-lookup
+hostname R-OESTE
+banner motd # LUIGGY ENCARNACION 2025-0663 | EL ACCESO NO AUTORIZADO ESTA RESTRINGIDO #
+username Admin privilege 15 secret cisco
+service password-encryption
+
+ip domain-name redlocal.com
+crypto key generate rsa general-keys modulus 1024
+ip ssh version 2
+ip ssh time-out 60
+ip ssh authentication-retries 3
+
+line console 0
+ exec-timeout 5 0
+ logging synchronous
+line vty 0 4
+ login local
+ transport input ssh
+ exec-timeout 5 0
+ logging synchronous
+
+exit
+
+! WAN hacia ISP
+interface GigabitEthernet2/0
+ ip address 30.6.63.1 255.255.255.252
+ no shutdown
+ ip nat outside
+
+! LAN
+interface GigabitEthernet0/0
+ ip address 172.16.63.1 255.255.255.0
+ no shutdown
+ ip nat inside
+exit
+
+! DHCP
+ip dhcp excluded-address 172.16.63.1 172.16.63.9
+
+ip dhcp pool REDLOCAL
+ network 172.16.63.0 255.255.255.0
+ default-router 172.16.63.1
+ dns-server 8.8.8.8 1.1.1.1
+ domain-name redlocal.com
+
+! NAT
+ip nat inside source list NAT_ACL interface GigabitEthernet2/0 overload
+
+ip access-list standard NAT_ACL
+ permit 172.16.63.0 0.0.0.255
+exit
+
+! Ruta default hacia ISP
+ip route 0.0.0.0 0.0.0.0 30.6.63.2
+
+end
+wr
+
+
+──────────────────────────────────────────
+▶ DISPOSITIVO: SW-1
+──────────────────────────────────────────
+en
+conf t
+no ip domain-lookup
+hostname SW-1
+banner motd # LUIGGY ENCARNACION 2025-0663 | EL ACCESO NO AUTORIZADO ESTA RESTRINGIDO#
+username Admin privilege 15 secret cisco
+service password-encryption
+
+ip domain-name redlocal.com
+crypto key generate rsa general-keys modulus 1024
+ip ssh version 2
+ip ssh time-out 60
+ip ssh authentication-retries 3
+
+line console 0
+ exec-timeout 5 0
+ logging synchronous
+line vty 0 4
+ login local
+ exec-timeout 5 0
+ logging synchronous
+ transport input ssh
+exit
+
+interface vlan1
+ ip address 10.6.63.2 255.255.255.0
+ no shutdown
+
+ip default-gateway 10.6.63.1
+
+int gig0/0
+ no negotiation auto
+ duplex full
+
+end
+wr
+
+
+──────────────────────────────────────────
+▶ DISPOSITIVO: SW-2
+──────────────────────────────────────────
+en
+conf t
+no ip domain-lookup
+hostname SW-2
+banner motd # LUIGGY ENCARNACION 2025-0663 | EL ACCESO NO AUTORIZADO ESTA RESTRINGIDO#
+username Admin privilege 15 secret cisco
+service password-encryption
+
+ip domain-name redlocal.com
+crypto key generate rsa general-keys modulus 1024
+ip ssh version 2
+ip ssh time-out 60
+ip ssh authentication-retries 3
+
+line console 0
+ exec-timeout 5 0
+ logging synchronous
+line vty 0 4
+ login local
+ exec-timeout 5 0
+ logging synchronous
+ transport input ssh
+exit
+
+interface vlan1
+ ip address 172.16.63.2 255.255.255.0
+ no shutdown
+ip default-gateway 172.16.63.1
+
+int gig0/0
+ no negotiation auto
+ duplex full
+
+end
+wr
+
+
+################################################################################
+#  COMPROBACIÓN — VPN L2TP/IPSEC CLIENT-TO-SITE IKEv1
+################################################################################
+
+! Verificar que el túnel se levantó
+show crypto isakmp sa
+
+! Verificar los contadores IPSec
+show crypto ipsec sa
+
+! Verificar la sesión L2TP
+show vpdn session
+
+! Verificar la interfaz Virtual-Access
+show ip interface brief
+
+! Verificar la dirección IP asignada
+show users
